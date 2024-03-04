@@ -3,6 +3,8 @@ Author: 蒋宁
 Department: 实施运维部
 Date: 2024/3/1
 Process：可实现对信息报送内容修改，暂无登录鉴权功能，自适应需要测试
+
+2024.3.4更新：增加占道情况修改功能
 """
 
 from flask import Flask, request, render_template, jsonify, redirect, url_for, flash
@@ -73,6 +75,24 @@ class TEventSpare(db.Model):
     f_vc_createjopnum = db.Column(db.String(255))
     f_vc_createname = db.Column(db.String(255))
 
+class TEventAccident(db.Model):
+    __tablename__ = 't_event_accident'
+    f_eventid = db.Column(db.Integer, primary_key=True)
+    f_up_jamnum = db.Column(db.String(255))
+    f_down_jamnum = db.Column(db.String(255))
+
+class TEventClear(db.Model):
+    __tablename__ = 't_event_clear'
+    id = db.Column(db.String(40), primary_key=True)  # 更新主键字段名和类型
+    f_eventid = db.Column(db.String(40), nullable=False)
+    f_up_jamnum = db.Column(db.String(255))
+    f_down_jamnum = db.Column(db.String(255))
+
+class TEventConmain(db.Model):
+    __tablename__ = 't_event_conmain'
+    f_eventid = db.Column(db.Integer, primary_key=True)
+    f_up_jamnum = db.Column(db.String(255))
+    f_down_jamnum = db.Column(db.String(255))
 
 # 添加其他子表模型...
 
@@ -92,16 +112,20 @@ def query():
     if event:
         if event.f_typeid == 0:
             retrofit_info = TEventAccidentRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            jam_info = TEventAccident.query.filter_by(f_eventid=event.f_eventid).first()
         elif event.f_typeid == 1:
             retrofit_info = TEventClearRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            jam_info = TEventClear.query.filter_by(f_eventid=event.f_eventid).first()
         elif event.f_typeid == 3:
             retrofit_info = TEventConmainRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            jam_info = TEventConmain.query.filter_by(f_eventid=event.f_eventid).first()
         elif event.f_typeid == 10:
             retrofit_info = TEventAbnormal.query.filter_by(f_eventid=event.f_eventid).first()
         spare_info = TEventSpare.query.filter_by(f_eventid=event.f_eventid).all()
-            # 根据需要添加其他条件分支
-            # ...
-    return render_template('results.html', event=event, retrofit_info=retrofit_info, spare_info=spare_info)
+        # 根据需要添加其他条件分支
+        # ...
+    return render_template('results.html', event=event, retrofit_info=retrofit_info, jam_info=jam_info,
+                           spare_info=spare_info)
 
 @app.route('/update', methods=['POST'])
 def update():
@@ -120,14 +144,28 @@ def update():
 
             # 根据event.f_typeid来判断更新哪个子表
             retrofit_model = None
+            jam_model = None
             if event.f_typeid == 0:
                 retrofit_model = TEventAccidentRetrofit
+                jam_model = TEventAccident
             elif event.f_typeid == 1:
                 retrofit_model = TEventClearRetrofit
+                jam_model = TEventClear
             elif event.f_typeid == 3:
                 retrofit_model = TEventConmainRetrofit
+                jam_model = TEventConmain
             elif event.f_typeid == 10:
                 retrofit_model = TEventAbnormal
+
+            if jam_model:
+                # 获取子表实例
+                jam = jam_model.query.filter_by(f_eventid=event_id).first()
+                if jam:
+                    f_up_jamnum = request.form.get('f_up_jamnum')
+                    f_down_jamnum = request.form.get('f_down_jamnum')
+                    # 直接对实例属性赋值
+                    jam.f_up_jamnum = f_up_jamnum
+                    jam.f_down_jamnum = f_down_jamnum
 
             if retrofit_model:
                 # 获取子表实例
