@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>信息报送修改工具</title>
+</head>
+<body>
+    <h2>信息报送修改工具</h2>
+    <!-- 显示当前登录的用户 -->
+    {% if current_user.is_authenticated %}
+    <p>欢迎, {{ current_user.username }}!</p>
+    <form action="/logout" method="post">
+        <input type="submit" value="注销">
+    </form>
+    {% endif %}
+
+    <form method="get" action="/query">
+    订单号：<input type="text" name="orderid">
+    <input type="submit" value="查询">
+    </form>
+
+    <div id="results">
+        <!-- 查询结果将在这里通过Flask渲染 -->
+    </div>
+</body>
+</html>

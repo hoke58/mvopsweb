@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>查询结果</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        input[type="text"], input[type="hidden"] {
+            width: 100%; /* 默认宽度，使输入框在小屏幕上占满整个容器宽度 */
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        label {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            input[type="text"] {
+                width: 50%; /* 在较大屏幕上调整输入框宽度为容器的50% */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>查询结果</h2>
+    {% if event %}
+       <form method="post" action="{{ url_for('update') }}">
+            <!-- 隐藏字段，用于存储订单号和事件ID -->
+            <input type="hidden" name="orderid" value="{{ event.f_vc_orderid }}">
+            <input type="hidden" name="event_id" value="{{ event.f_eventid }}">
+
+            <!-- 订单号和事件ID显示 -->
+            <div><label>订单号:</label><span>{{ event.f_vc_orderid }}</span></div>
+            <div><label>事件ID:</label><span>{{ event.f_eventid }}</span></div>
+
+            <!-- 状态和事件状态输入 -->
+            <div><label for="f_state">状态:</label><input type="text" id="f_state" name="f_state" value="{{ event.f_state }}"></div>
+            <div><label for="f_eventstate">事件状态:</label><input type="text" id="f_eventstate" name="f_eventstate" value="{{ event.f_eventstate }}"></div>
+
+            <!-- 报告状态输入 -->
+            <div><label for="f_vc_early">初报:</label><input type="text" id="f_vc_early" name="f_vc_early" value="{{ retrofit_info.f_vc_early if retrofit_info else '' }}"></div>
+            <div><label for="f_vc_renewal">续报:</label><input type="text" id="f_vc_renewal" name="f_vc_renewal" value="{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}"></div>
+            <div><label for="f_vc_final">终报:</label><input type="text" id="f_vc_final" name="f_vc_final" value="{{ retrofit_info.f_vc_final if retrofit_info else '' }}"></div>
+
+            <!-- spare表中内容 -->
+            {% for spare in spare_info %}
+                <div>
+                    <input type="hidden" name="spare_id" value="{{ spare.f_vc_id }}">
+                    <label for="f_vc_renewal_spare_{{ spare.f_vc_id }}">spare表中内容:</label>
+                    <input type="text" id="f_vc_renewal_spare_{{ spare.f_vc_id }}" name="f_vc_renewal_spare_{{ spare.f_vc_id }}" value="{{ spare.f_vc_renewal }}">
+                </div>
+            {% endfor %}
+
+            <button type="submit">保存修改</button>
+        </form>
+    {% else %}
+        <p>没有找到与订单号对应的事件。</p>
+    {% endif %}
+    <a href="/">返回查询</a>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('form').submit(function(event) {
+            var confirmed = confirm("是否确认修改！");
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    setTimeout(function() { alert("{{ message }}"); }, 0);
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    });
+    </script>
+</body>
+</html>
