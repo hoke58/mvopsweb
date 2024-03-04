@@ -4,7 +4,7 @@ Department: 实施运维部
 Date: 2024/3/1
 Process：可实现对信息报送内容修改，暂无登录鉴权功能，自适应需要测试
 
-2024.3.4更新：增加占道情况修改功能
+2024/3/4更新：增加占道情况修改功能
 """
 
 from flask import Flask, request, render_template, jsonify, redirect, url_for, flash
