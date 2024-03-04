@@ -94,6 +94,10 @@
             <div><label for="f_vc_renewal">续报:</label><input type="text" id="f_vc_renewal" name="f_vc_renewal" value="{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}"></div>
             <div><label for="f_vc_final">终报:</label><input type="text" id="f_vc_final" name="f_vc_final" value="{{ retrofit_info.f_vc_final if retrofit_info else '' }}"></div>
 
+            <!-- 占道情况输入 -->
+            <div><label for="f_down_jamnum">上行占道:</label><input type="text" id="f_down_jamnum" name="f_down_jamnum" value="{{ jam_info.f_down_jamnum if jam_info else '' }}"></div>
+            <div><label for="f_up_jamnum">下行占道:</label><input type="text" id="f_up_jamnum" name="f_up_jamnum" value="{{ jam_info.f_up_jamnum if jam_info else '' }}"></div>
+
             <!-- spare表中内容 -->
             {% for spare in spare_info %}
                 <div>
