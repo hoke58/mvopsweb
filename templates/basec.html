@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+    {% block script %}
+        <script src="/static/jquery.min.js"></script>
+        <script>
+        $(document).ready(function() {
+            $('form').submit(function(event) {
+                var confirmed = confirm("是否确认修改！");
+                if (!confirmed) {
+                    event.preventDefault();
+                }
+            });
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        setTimeout(function() { alert("{{ message }}"); }, 0);
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        });
+        </script>
+{% endblock %}

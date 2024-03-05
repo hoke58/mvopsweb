@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {% block title %}
+
+        {% endblock %}</title>
+     <!-- Bootstrap 的 CSS 文件 -->
+    <link rel="stylesheet" href="/static/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      html,
+      body {
+        /* height: 100%; */
+        /* overflow: hidden; */
+      }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+        background-color: #5d5d5d;
+      }
+
+      /* input[type="text"],
+      input[type="hidden"] {
+        padding: 8px;
+        margin: 5px 0;
+        box-sizing: border-box;
+      } */
+
+      button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+
+      /* 响应式设计 */
+
+      .container {
+        max-width: 800px;
+        background-color: #fff;
+        box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.2);
+        border-radius: 2.5em;
+        padding: 2em;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .form-box {
+      }
+      .form-item {
+        display: flex;
+        margin: 15px 0;
+        line-height: 38px;
+        text-align: left;
+      }
+      .form-item-label {
+        width: 7em;
+        text-align: right;
+        margin: 0;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+      .form-item-content {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        flex-direction: row;
+        flex: 1;
+      }
+      .empty-box {
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* iphone12promax */
+      @media (max-width: 768px) {
+        body {
+          padding: 0;
+        }
+        .container {
+          border-radius: 0px;
+          box-shadow: none;
+          padding: 1em;
+        }
+        .form-item {
+          flex-direction: column;
+        }
+        .form-item-label {
+          width: auto;
+          text-align: left;
+        }
+      }
+
+      /* 更大屏幕的媒体查询 */
+      @media (min-width: 768px) {
+        body {
+          background-color: #5d5d5d;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block header %}
+
+        {% endblock %}
+
+
+         {% block content %}
+
+        {% endblock %}
+        {% block script %}
+
+        {% endblock %}
+    </div>
+</body>
+</html>
