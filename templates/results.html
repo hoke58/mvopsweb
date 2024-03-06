@@ -66,7 +66,7 @@
                           type="text"
                           id="f_accidentdesc"
                           name="f_accidentdesc"
-                          value="{{ event.f_accidentdesc }}"
+{#                          value=""#}
                         >{{ event.f_accidentdesc }}</textarea>
                     </div>
                 </div>
@@ -80,22 +80,24 @@
                             type="text"
                             id="f_vc_early"
                             name="f_vc_early"
-                            value="{{ retrofit_info.f_vc_early if retrofit_info else '' }}"
+{#                            value=""#}
                         >{{ retrofit_info.f_vc_early if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
-                <div class="form-item">
-                    <label class="form-item-label" for="f_vc_renewal">续报:</label>
-                    <div class="form-item-content">
-                        <textarea
-                            class="form-control"
-                            type="text"
-                            id="f_vc_renewal"
-                            name="f_vc_renewal"
-                            value="{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}"
-                        >{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}</textarea>
-                  </div>
-                </div>
+{#                {% if retrofit_info.f_vc_renewal %}#}
+                    <div class="form-item">
+                        <label class="form-item-label" for="f_vc_renewal">续报:</label>
+                        <div class="form-item-content">
+                            <textarea
+                                class="form-control"
+                                type="text"
+                                id="f_vc_renewal"
+                                name="f_vc_renewal"
+    {#                            value=""#}
+                            >{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}</textarea>
+                      </div>
+                    </div>
+{#                {% endif %}#}
                 <div class="form-item">
                     <label class="form-item-label" for="f_vc_final">终报:</label>
                     <div class="form-item-content">
@@ -104,36 +106,38 @@
                             type="text"
                             id="f_vc_final"
                             name="f_vc_final"
-                            value="{{ retrofit_info.f_vc_final if retrofit_info else '' }}"
+{#                            value=""#}
                         >{{ retrofit_info.f_vc_final if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
 
                 <!-- 占道情况输入 -->
-                <div class="form-item">
-                    <label class="form-item-label" for="f_down_jamnum">下行占道:</label>
-                    <div class="form-item-content">
-                        <input
-                            class="form-control"
-                            type="text"
-                            id="f_down_jamnum"
-                            name="f_down_jamnum"
-                            value="{{ jam_info.f_down_jamnum if jam_info else '' }}"
-                        />
-                  </div>
-                </div>
-                <div class="form-item">
-                    <label class="form-item-label" for="f_up_jamnum">上行占道:</label>
-                    <div class="form-item-content">
-                        <input
-                            class="form-control"
-                            type="text"
-                            id="f_up_jamnum"
-                            name="f_up_jamnum"
-                            value="{{ jam_info.f_up_jamnum if jam_info else '' }}"
-                        />
-                  </div>
-                </div>
+                {% if jam_info %}
+                    <div class="form-item">
+                        <label class="form-item-label" for="f_down_jamnum">下行占道:</label>
+                        <div class="form-item-content">
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="f_down_jamnum"
+                                name="f_down_jamnum"
+                                value="{{ jam_info.f_down_jamnum if jam_info else '' }}"
+                            />
+                      </div>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-item-label" for="f_up_jamnum">上行占道:</label>
+                        <div class="form-item-content">
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="f_up_jamnum"
+                                name="f_up_jamnum"
+                                value="{{ jam_info.f_up_jamnum if jam_info else '' }}"
+                            />
+                        </div>
+                    </div>
+                {% endif %}
 
                 <!-- spare表中内容 -->
                 <!--div class="form-item"-->
@@ -147,22 +151,11 @@
                             type="text"
                             id="f_vc_renewal_spare_{{ spare.f_vc_id }}"
                             name="f_vc_renewal_spare_{{ spare.f_vc_id }}"
-                            value="{{ spare.f_vc_renewal }}"
                             style="margin-top: 5px"
                         >{{ spare.f_vc_renewal }}</textarea>
                     </div>
                 {% endfor %}
                 <!--/div-->
-                <div class="form-item">
-                <div class="form-item-content">
-                    <label class="form-item-label" >类型 ：</label>
-                <input class="form-control" style="margin-top: 5px" value="{{ event }}"><br>
-                </div>
-                </div>
-{#                {% for msg in event %}#}
-{#                    <input value="{{ msg }}"><br>#}
-{#                {% endfor %}#}
-
 
 {#                <div class="form-item">#}
 {#                    <label class="form-item-label" >验证字符：</label>#}
