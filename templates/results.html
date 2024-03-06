@@ -61,13 +61,13 @@
                 <div class="form-item">
                     <label class="form-item-label" for="f_accidentdesc">t_event表:</label>
                     <div class="form-item-content">
-                        <input
+                        <textarea
                           class="form-control"
                           type="text"
                           id="f_accidentdesc"
                           name="f_accidentdesc"
                           value="{{ event.f_accidentdesc }}"
-                        />
+                        >{{ event.f_accidentdesc }}</textarea>
                     </div>
                 </div>
 
@@ -75,37 +75,37 @@
                 <div class="form-item">
                     <label class="form-item-label" for="f_vc_early">初报:</label>
                     <div class="form-item-content">
-                        <input
+                        <textarea
                             class="form-control"
                             type="text"
                             id="f_vc_early"
                             name="f_vc_early"
                             value="{{ retrofit_info.f_vc_early if retrofit_info else '' }}"
-                        />
+                        >{{ retrofit_info.f_vc_early if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
                 <div class="form-item">
                     <label class="form-item-label" for="f_vc_renewal">续报:</label>
                     <div class="form-item-content">
-                        <input
+                        <textarea
                             class="form-control"
                             type="text"
                             id="f_vc_renewal"
                             name="f_vc_renewal"
                             value="{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}"
-                        />
+                        >{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
                 <div class="form-item">
                     <label class="form-item-label" for="f_vc_final">终报:</label>
                     <div class="form-item-content">
-                        <input
+                        <textarea
                             class="form-control"
                             type="text"
                             id="f_vc_final"
                             name="f_vc_final"
                             value="{{ retrofit_info.f_vc_final if retrofit_info else '' }}"
-                        />
+                        >{{ retrofit_info.f_vc_final if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
 
@@ -142,14 +142,14 @@
                     <div class="form-item">
                         <label class="form-item-label" for="f_vc_renewal_spare_{{ spare.f_vc_id }}" >类型 {{ spare.f_vc_spare }}：</label>
                         <input type="hidden" name="spare_id" value="{{ spare.f_vc_id }}">
-                        <input
+                        <textarea
                             class="form-control"
                             type="text"
                             id="f_vc_renewal_spare_{{ spare.f_vc_id }}"
                             name="f_vc_renewal_spare_{{ spare.f_vc_id }}"
                             value="{{ spare.f_vc_renewal }}"
                             style="margin-top: 5px"
-                        />
+                        >{{ spare.f_vc_renewal }}</textarea>
                     </div>
                 {% endfor %}
                 <!--/div-->
