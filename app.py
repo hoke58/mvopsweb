@@ -7,19 +7,22 @@ Process：可实现对信息报送内容修改，暂无登录鉴权功能，自�
 
 from flask import Flask, request, render_template, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-
+from urllib.parse import quote_plus as urlquote
 
 app = Flask(__name__)
 app.secret_key = 'microvideo'  # 用于安全地签名session cookie
 
 # 需要绑定的备份数据库
 SQLALCHEMY_BINDS = {
-    'back': 'mysql+pymysql://root:123456@10.120.128.0/back'
+    # 'back': 'mysql+pymysql://root:123456@10.120.128.2/back'
+    'back': 'mysql+pymysql://back_prozhdd:BKpr.134@192.168.211.8/prozhdd'
 }
 
 # 生产数据库
 # app.config['SQLALCHEMY_DATABASE_URI'] = f"{DB_DIALECT}+{DB_DRIVER}://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123456@10.120.128.0/zhdd'
+# f'mysql+pymysql://root:{urlquote("Zhdd@2021")}@192.168.251.36/zhdd' 密码有特殊字符引起保障时，需要编码
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123456@10.120.128.2/zhdd'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{urlquote("Zhdd@2021")}@192.168.251.36/zhdd'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_BINDS'] = SQLALCHEMY_BINDS
 # app.config['SQLALCHEMY_ECHO'] = True
@@ -175,9 +178,7 @@ class TEventConmain2(db.Model):
 
 @app.route('/', methods=['GET'])
 def index():
-
     return render_template('index.html')
-
 
 # 修改这个路由以直接从查询字符串获取`orderid`
 @app.route('/query', methods=['GET'])
@@ -189,6 +190,7 @@ def query():
     retrofit_info = None
     spare_info = []  # 在这里初始化spare_info为一个空列表
     if event:
+        spare_info = TEventSpare.query.filter_by(f_eventid=event.f_eventid).all()
         if event.f_typeid == 0:
             retrofit_info = TEventAccidentRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
             jam_info = TEventAccident.query.filter_by(f_eventid=event.f_eventid).first()
@@ -200,11 +202,15 @@ def query():
             jam_info = TEventConmain.query.filter_by(f_eventid=event.f_eventid).first()
         elif event.f_typeid == 10:
             retrofit_info = TEventAbnormal.query.filter_by(f_eventid=event.f_eventid).first()
+            return render_template('results.html', event=event, retrofit_info=retrofit_info,
+                                   spare_info=spare_info)
 
-        spare_info = TEventSpare.query.filter_by(f_eventid=event.f_eventid).all()
+
             # 根据需要添加其他条件分支
             # ...
-    return render_template('results.html', event=event, retrofit_info=retrofit_info, jam_info=jam_info, spare_info=spare_info)
+        return render_template('results.html', event=event, retrofit_info=retrofit_info, jam_info=jam_info, spare_info=spare_info)
+
+    return render_template('index.html')
 
 @app.route('/update', methods=['POST'])
 # @jwt_required()
@@ -222,13 +228,21 @@ def update():
 
         if event:
             event2 = TEvent2.query.filter_by(f_eventid=event_id).first()
-            event2.f_eventid=event.f_eventid,
-            event2.f_state=event.f_state,
-            event2.f_eventstate=event.f_eventstate,
-            event2.f_accidentdesc=event.f_accidentdesc,
-            event2.f_typeid=event.f_typeid,
-            event2.f_vc_orderid=event.f_vc_orderid
-            # db.session.add(event2)
+            if event2:
+                event2.f_eventid=event.f_eventid
+                event2.f_state=event.f_state
+                event2.f_eventstate=event.f_eventstate
+                event2.f_accidentdesc=event.f_accidentdesc
+                event2.f_typeid=event.f_typeid
+                event2.f_vc_orderid=event.f_vc_orderid
+            else:
+                event2 = TEvent2(f_eventid=event.f_eventid,
+                                 f_state=event.f_state,
+                                 f_eventstate=event.f_eventstate,
+                                 f_accidentdesc=event.f_accidentdesc,
+                                 f_typeid=event.f_typeid,
+                                 f_vc_orderid=event.f_vc_orderid)
+                db.session.add(event2)
             event.f_state = f_state
             event.f_eventstate = f_eventstate
             event.f_accidentdesc = f_accidentdesc
@@ -260,10 +274,16 @@ def update():
                 jam = jam_model.query.filter_by(f_eventid=event_id).first()
                 if jam:
                     jam2 = jam_model2.query.filter_by(f_eventid=event_id).first()
-                    jam2.f_eventid=jam.f_eventid,
-                    jam2.f_up_jamnum=jam.f_up_jamnum,
-                    jam2.f_down_jamnum=jam.f_down_jamnum
-                    # db.session.add(jam2)
+                    if not jam2:
+                        jam2 = jam_model2(f_eventid=jam.f_eventid,
+                                          f_up_jamnum=jam.f_up_jamnum,
+                                          f_down_jamnum=jam.f_down_jamnum)
+                        db.session.add(jam2)
+                    else:
+                        jam2.f_eventid=jam.f_eventid
+                        jam2.f_up_jamnum=jam.f_up_jamnum
+                        jam2.f_down_jamnum=jam.f_down_jamnum
+
                     f_up_jamnum = request.form.get('f_up_jamnum')
                     f_down_jamnum = request.form.get('f_down_jamnum')
                     # 直接对实例属性赋值
@@ -275,11 +295,17 @@ def update():
                 retrofit = retrofit_model.query.filter_by(f_eventid=event_id).first()
                 if retrofit:
                     retrofit2 = retrofit_model2.query.filter_by(f_eventid=event_id).first()
-                    retrofit2.f_eventid=retrofit.f_eventid,
-                    retrofit2.f_eventidf_vc_early=retrofit.f_vc_early,
-                    retrofit2.f_eventidf_vc_renewal=retrofit.f_vc_renewal,
-                    retrofit2.f_eventidf_vc_final=retrofit.f_vc_final
-                    # db.session.add(retrofit2)
+                    if retrofit2:
+                        retrofit2.f_eventid=retrofit.f_eventid
+                        retrofit2.f_vc_early=retrofit.f_vc_early
+                        retrofit2.f_vc_renewal=retrofit.f_vc_renewal
+                        retrofit2.f_vc_final=retrofit.f_vc_final
+                    else:
+                        retrofit2 = retrofit_model2(f_eventid=retrofit.f_eventid,
+                                                    f_vc_early=retrofit.f_vc_early,
+                                                    f_vc_renewal=retrofit.f_vc_renewal,
+                                                    f_vc_final=retrofit.f_vc_final)
+                        db.session.add(retrofit2)
                     f_vc_early = request.form.get('f_vc_early')
                     f_vc_renewal = request.form.get('f_vc_renewal')
                     f_vc_final = request.form.get('f_vc_final')
@@ -295,14 +321,23 @@ def update():
                 spare = TEventSpare.query.filter_by(f_vc_id=spare_id).first()
                 if spare:
                     spare2 = TEventSpare2.query.filter_by(f_vc_id=spare_id).first()
-                    spare2.f_vc_id=spare.f_vc_id,
-                    spare2.f_eventid=spare.f_eventid,
-                    spare2.f_vc_renewal=spare.f_vc_renewal,
-                    spare2.f_createtime=spare.f_createtime,
-                    spare2.f_vc_spare=spare.f_vc_spare,
-                    spare2.f_vc_createjopnum=spare.f_vc_createjopnum,
-                    spare2.f_vc_createname=spare.f_vc_createname
-                    db.session.add(spare2)
+                    if spare2:
+                        spare2.f_vc_id=spare.f_vc_id,
+                        spare2.f_eventid=spare.f_eventid,
+                        spare2.f_vc_renewal=spare.f_vc_renewal,
+                        spare2.f_createtime=spare.f_createtime,
+                        spare2.f_vc_spare=spare.f_vc_spare,
+                        spare2.f_vc_createjopnum=spare.f_vc_createjopnum,
+                        spare2.f_vc_createname=spare.f_vc_createname
+                    else:
+                        spare2 = TEventSpare2(f_vc_id=spare.f_vc_id,
+                                              f_eventid=spare.f_eventid,
+                                              f_vc_renewal=spare.f_vc_renewal,
+                                              f_createtime=spare.f_createtime,
+                                              f_vc_spare=spare.f_vc_spare,
+                                              f_vc_createjopnum=spare.f_vc_createjopnum,
+                                              f_vc_createname=spare.f_vc_createname)
+                        db.session.add(spare2)
                     spare.f_vc_renewal = f_vc_renewal_spare
             print("提交数据库")
             db.session.commit()
@@ -313,10 +348,12 @@ def update():
 
     except Exception as e:
         db.session.rollback()
+        print(e)
         flash(f'修改失败: {e}', 'error')
 
     return redirect(url_for('query', orderid=orderid))
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # python3 -m flask run --host=0.0.0.0 --port=5000
+    app.run(debug=True, host='0.0.0.0', port=8080)
