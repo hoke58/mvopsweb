@@ -3,14 +3,16 @@
 信息报送修改工具
 {% endblock %}
 {% block content %}
-    <h3>信息报送修改工具</h3>
     <!-- 显示当前登录的用户 -->
-{#    {% if current_user.is_authenticated %}#}
-{#    <p>欢迎, {{ current_user.username }}!</p>#}
-{#    <form action="/logout" method="post">#}
-{#        <input type="submit" value="注销">#}
-{#    </form>#}
-{#    {% endif %}#}
+    {% if current_user %}
+    <div style="margin-bottom: -30px; display: flex; flex-direction: row-reverse; width: 100%;">
+        <form action="/logout" method="get">
+            <span>欢迎, {{ current_user }}!</span>
+            <input type="submit" class="btn btn-warning" value="注销">
+        </form>
+    </div>
+    {% endif %}
+    <h3>信息报送修改工具</h3>
     <br>
     <br>
     <form method="get" action="/query">
@@ -23,19 +25,15 @@
                     name="orderid"
                 />
             </div>
-
         </div>
-{#        <div class="form-item">#}
-{#            <label class="form-item-label" >验证字符：</label>#}
-{#            <div class="form-item-content">#}
-{#                <input#}
-{#                    class="form-control"#}
-{#                    type="text"#}
-{#                    name="verify"#}
-{#                />#}
-{#            </div>#}
-{#        </div>#}
+
         <br>
         <input type="submit" value="查询">
+
     </form>
+        {% if prompt %}
+            <div class="form-item">
+                查无此单号：<label class="form-item-content" style="align-items: center; color: red" >{{prompt}}</label>，请检查
+            </div>
+        {% endif %}
 {% endblock %}

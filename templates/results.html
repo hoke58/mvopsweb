@@ -3,12 +3,23 @@
     查询结果
 {% endblock %}
 {% block content %}
+    <!-- 显示当前登录的用户 -->
+    {% if current_user %}
+    <div style="margin-bottom: -30px; display: flex; flex-direction: row-reverse; width: 100%;">
+        <form action="/logout" method="get">
+            <span>欢迎, {{ current_user }}!</span>
+            <input type="submit" class="btn btn-warning" value="注销">
+        </form>
+    </div>
+    {% endif %}
         <h3>查询结果</h3>
         {% if event %}
             <form method="post" action="{{ url_for('update') }}" class="form-box">
+
                 <!-- 隐藏字段，用于存储订单号和事件ID -->
                 <input type="hidden" name="orderid" value="{{ event.f_vc_orderid }}">
                 <input type="hidden" name="event_id" value="{{ event.f_eventid }}">
+                <input type="hidden" name="m_type" value="event">
 
                 <!-- 订单号和事件ID显示 -->
                 <div class="form-item">
@@ -26,8 +37,8 @@
                 <div class="form-item">
                     <label class="form-item-label">事件类型:</label>
                     <div class="form-item-content">
-                        <span>{{ event.f_typeid }}</span>
-                        <span style="color: red"> &nbsp;（0事故 1救援 3养护 10异常事件）</span>
+                        <span style="color: red">{% if event.f_typeid == 0 %}事故{% elif event.f_typeid == 1 %}救援{% elif event.f_typeid == 3 %}养护{% elif event.f_typeid == 10 %}异常事件{%endif%}</span>
+<!--                        <span style="color: red"> &nbsp;（0事故 1救援 3养护 10异常事件）</span>-->
                     </div>
                 </div>
 
@@ -35,41 +46,59 @@
                 <div class="form-item">
                     <label class="form-item-label" for="f_state">事件进展状态:</label>
                     <div class="form-item-content">
-                        <span style="color: red">（0接报 1接收 2接警 5出发 6到达 7施救 8离场 9解拖 10结案）</span>
-                        <input
-                          class="form-control"
-                          type="text"
-                          id="f_state"
-                          name="f_state"
-                          value="{{ event.f_state }}"
-                        />
+                        <span style="color: red">{% if event.f_state == 0 %}接报
+                            {% elif event.f_state == 1 %}接收
+                            {% elif event.f_state == 2 %}接警
+                            {% elif event.f_state == 5 %}出发
+                            {% elif event.f_state == 6 %}到达
+                            {% elif event.f_state == 7 %}施救
+                            {% elif event.f_state == 8 %}离场
+                            {% elif event.f_state == 9 %}解拖
+                            {% elif event.f_state == 10 %}结案{%endif%}</span>
+
+<!--                        <input-->
+<!--                          class="form-control"-->
+<!--                          type="text"-->
+<!--                          id="f_state"-->
+<!--                          name="f_state"-->
+<!--                          value="{{ event.f_state }}"-->
+<!--                        />-->
                     </div>
                 </div>
                 <div class="form-item">
-                    <label class="form-item-label" for="f_eventstate">事件状态:</label>
+<!--                    <label class="form-item-label" for="f_eventstate">事件状态:</label>-->
                     <div class="form-item-content">
-                        <span style="color: red">0进行中，1结案</span>
-                        <input
-                          class="form-control"
-                          type="text"
-                          id="f_eventstate"
-                          name="f_eventstate"
-                          value="{{ event.f_eventstate }}"
-                        />
+<!--                        <span style="color: red">0进行中，1结案</span>-->
+<!--                        <br>-->
+<!--                        <input-->
+<!--                          class="form-control"-->
+<!--                          type="text"-->
+<!--                          id="f_eventstate"-->
+<!--                          name="f_eventstate"-->
+<!--                          value="{{ event.f_eventstate }}"-->
+<!--                        />-->
+                        <div  class="form-item-content" >
+                            <label class="form-item-label" for="onging">事件恢复</label>
+                            <input class="form-item-label form-control" type="radio" id="onging" name="f_eventstate" {% if event.f_eventstate == 0 %} checked {% endif %} value="0"/>
+                        </div>
+                        <div  class="form-item-content" >
+                            <label class="form-item-label" for="end">结案</label>
+                            <input class="form-item-label form-control" type="radio" id="end" name="f_eventstate" {% if event.f_eventstate == 1 %} checked {% endif %} value="1"/>
+                        </div>
                     </div>
                 </div>
-                <div class="form-item">
-                    <label class="form-item-label" for="f_accidentdesc">t_event表:</label>
-                    <div class="form-item-content">
-                        <textarea
-                          class="form-control"
-                          type="text"
-                          id="f_accidentdesc"
-                          name="f_accidentdesc"
-{#                          value=""#}
-                        >{{ event.f_accidentdesc }}</textarea>
-                    </div>
-                </div>
+<!--                <div class="form-item">-->
+<!--                此处如果是终报修改，则同步修改此处信息，其他修改忽略-->
+<!--                    <label class="form-item-label" for="f_accidentdesc">事件描述:</label>-->
+<!--                    <div class="form-item-content">-->
+<!--                        <textarea-->
+<!--                          class="form-control"-->
+<!--                          type="text"-->
+<!--                          id="f_accidentdesc"-->
+<!--                          name="f_accidentdesc"-->
+<!--                        >{{ event.f_accidentdesc }}</textarea>-->
+<!--                    </div>-->
+<!--                </div>-->
 
                 <!-- 报告状态输入 -->
                 <div class="form-item">
@@ -106,45 +135,53 @@
                             type="text"
                             id="f_vc_final"
                             name="f_vc_final"
-{#                            value=""#}
-                        >{{ retrofit_info.f_vc_final if retrofit_info else '' }}</textarea>
+                            >{{ retrofit_info.f_vc_final if retrofit_info else '' }}</textarea>
                   </div>
                 </div>
 
                 <!-- 占道情况输入 -->
-                {% if jam_info %}
-                    <div class="form-item">
-                        <label class="form-item-label" for="f_down_jamnum">下行占道:</label>
-                        <div class="form-item-content">
-                            <input
-                                class="form-control"
-                                type="text"
-                                id="f_down_jamnum"
-                                name="f_down_jamnum"
-                                value="{{ jam_info.f_down_jamnum if jam_info else '' }}"
-                            />
-                      </div>
-                    </div>
-                    <div class="form-item">
-                        <label class="form-item-label" for="f_up_jamnum">上行占道:</label>
-                        <div class="form-item-content">
-                            <input
-                                class="form-control"
-                                type="text"
-                                id="f_up_jamnum"
-                                name="f_up_jamnum"
-                                value="{{ jam_info.f_up_jamnum if jam_info else '' }}"
-                            />
-                        </div>
-                    </div>
-                {% endif %}
+<!--                {% if jam_info %}-->
+<!--                    <div class="form-item">-->
+<!--&lt;!&ndash;                        上下行占道信息是反的，所以此处也是反的&ndash;&gt;-->
+<!--                        <label class="form-item-label" for="f_down_jamnum">上行占道:</label>-->
+<!--                        <div class="form-item-content">-->
+<!--                            <input-->
+<!--                                class="form-control"-->
+<!--                                type="text"-->
+<!--                                id="f_down_jamnum"-->
+<!--                                name="f_down_jamnum"-->
+<!--                                value="{{ jam_info.f_down_jamnum if jam_info else '' }}"-->
+<!--                            />-->
+<!--                      </div>-->
+<!--                    </div>-->
+<!--                    <div class="form-item">-->
+<!--                        <label class="form-item-label" for="f_up_jamnum">下行占道:</label>-->
+<!--                        <div class="form-item-content">-->
+<!--                            <input-->
+<!--                                class="form-control"-->
+<!--                                type="text"-->
+<!--                                id="f_up_jamnum"-->
+<!--                                name="f_up_jamnum"-->
+<!--                                value="{{ jam_info.f_up_jamnum if jam_info else '' }}"-->
+<!--                            />-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                {% endif %}-->
 
                 <!-- spare表中内容 -->
                 <!--div class="form-item"-->
-                <label class="form-item-label" >spare表内容:</label>
+                <label class="form-item-label" >过程总览</label>
                 {% for spare in spare_info %}
                     <div class="form-item">
-                        <label class="form-item-label" for="f_vc_renewal_spare_{{ spare.f_vc_id }}" >类型 {{ spare.f_vc_spare }}：</label>
+                        <label class="form-item-label" for="f_vc_renewal_spare_{{ spare.f_vc_id }}"
+                        >{% if spare.f_vc_spare == '1' %}
+                        初报:
+                        {% elif spare.f_vc_spare == '2' %}
+                        续报:
+                        {% elif spare.f_vc_spare == '3' %}
+                        终报:
+                        {% endif %}
+                        </label>
                         <input type="hidden" name="spare_id" value="{{ spare.f_vc_id }}">
                         <textarea
                             class="form-control"
@@ -157,16 +194,6 @@
                 {% endfor %}
                 <!--/div-->
 
-{#                <div class="form-item">#}
-{#                    <label class="form-item-label" >验证字符：</label>#}
-{#                    <div class="form-item-content">#}
-{#                        <input#}
-{#                            class="form-control"#}
-{#                            type="text"#}
-{#                            name="verify"#}
-{#                        />#}
-{#                    </div>#}
-{#                </div>#}
                 <button type="submit" class="btn btn-primary">保存修改</button>
             </form>
         {% else %}
