@@ -2,38 +2,155 @@
 {% block title %}
 信息报送修改工具
 {% endblock %}
+{% block script %}
+<script src="../static/jquery.min.js"></script>
+<script>
+    /**
+     * @function
+     * @todo tab切换
+     */
+    function onTabChange() {
+        window.location.href = '/search'
+
+    };
+
+</script>
+{% endblock %}
 {% block content %}
-    <!-- 显示当前登录的用户 -->
-    {% if current_user %}
-    <div style="margin-bottom: -30px; display: flex; flex-direction: row-reverse; width: 100%;">
-        <form action="/logout" method="get">
-            <span>欢迎, {{ current_user }}!</span>
-            <input type="submit" class="btn btn-warning" value="注销">
-        </form>
+<div class="page-wrapper">
+    <!--tab切换-->
+    <div class="tab-box">
+        <div class="tab-item cursor-scale " onclick="onTabChange()">信息查询</div>
+        <div class="tab-item cursor-scale is-active">信息编辑</div>
     </div>
-    {% endif %}
-    <h3>信息报送修改工具</h3>
-    <br>
-    <br>
-    <form method="get" action="/query">
-        <div class="form-item">
-            <label class="form-item-label" >订单号：</label>
-            <div class="form-item-content">
-                <input
-                    class="form-control"
-                    type="text"
-                    name="orderid"
-                />
-            </div>
+
+    <!--内容区域-->
+
+    <div class="content-box">
+
+        <div class="search-box">
+            <form method="get" action="/edit">
+                <input type="text" id="Eorderid" name="Eorderid" placeholder="请输入订单号" {% if event
+                       %}value="{{ event.f_vc_orderid }}" {% endif %}/>
+                <input class="button-box cursor-opacity" type="submit" value="查询">
+                {% if tag == "SUCC" %}
+                    <button class="button-box cursor-opacity">[<span style="color: #1c7430">修改成功</span>]
+                {% endif %}
+            </form>
         </div>
 
-        <br>
-        <input type="submit" value="查询">
-
-    </form>
-        {% if prompt %}
-            <div class="form-item">
-                查无此单号：<label class="form-item-content" style="align-items: center; color: red" >{{prompt}}</label>，请检查
+        <div class="table-box">
+            {% if event %}
+            <div class="table-row">
+                <div class="table-row-label">事件ID</div>
+                <div class="table-row-value">{{ event.f_eventid }}</div>
             </div>
-        {% endif %}
+            <div class="table-row">
+                <div class="table-row-label">事件类型</div>
+                <div class="table-row-value">{% if event.f_typeid == 0 %}事故{% elif event.f_typeid == 1 %}救援{%
+                    elif event.f_typeid == 3 %}养护{% elif event.f_typeid == 10 %}异常事件{%endif%}
+                </div>
+            </div>
+            <div class="table-row">
+                <div class="table-row-label">事件状态</div>
+                <div class="table-row-value">{% if event.f_state == 0 %}接报
+                    {% elif event.f_state == 1 %}接收
+                    {% elif event.f_state == 2 %}接警
+                    {% elif event.f_state == 5 %}出发
+                    {% elif event.f_state == 6 %}到达
+                    {% elif event.f_state == 7 %}施救
+                    {% elif event.f_state == 8 %}离场
+                    {% elif event.f_state == 9 %}解拖
+                    {% elif event.f_state == 10 %}结案{%endif%}
+                </div>
+            </div>
+            {% else %}
+            <div class="table-row">
+                <div class="table-row-label">事件ID</div>
+                <div class="table-row-value">{% if prompt %}查无{{prompt}}信息，请检查{% endif %}</div>
+            </div>
+            <div class="table-row">
+                <div class="table-row-label">事件类型</div>
+                <div class="table-row-value"></div>
+            </div>
+            <div class="table-row">
+                <div class="table-row-label">事件状态</div>
+                <div class="table-row-value"></div>
+            </div>
+            {% endif %}
+<!--            表单开始-->
+            <form class="form-box" action="/edit" method="post">
+                <input type="hidden" name="orderid" value="{{ event.f_vc_orderid if event else '' }}">
+                <input type="hidden" name="event_id" value="{{ event.f_eventid if event else '' }}">
+                <div class="form-item">
+                    <label class="form-item-label" for="f_vc_early">初报</label>
+                    <div class="form-item-content">
+                         <textarea
+                                 class="form-control"
+                                 type="text"
+                                 id="f_vc_early"
+                                 name="f_vc_early"
+                                 rows="4"
+                         >{{ retrofit_info.f_vc_early if retrofit_info else '' }}</textarea>
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label class="form-item-label" for="s_vc_renewal">续报</label>
+                    <div class="form-item-content">
+                         <textarea
+                                 class="form-control"
+                                 type="text"
+                                 id="s_vc_renewal"
+                                 name="f_vc_renewal"
+                                 rows="4"
+                         >{{ retrofit_info.f_vc_renewal if retrofit_info else '' }}</textarea>
+                    </div>
+                </div>
+                <div class="form-item">
+                    <label class="form-item-label" for="f_vc_final">终报</label>
+                    <div class="form-item-content">
+                         <textarea
+                                 class="form-control"
+                                 type="text"
+                                 id="f_vc_final"
+                                 name="f_vc_final"
+                                 rows="4"
+                         >{{ retrofit_info.f_vc_final if retrofit_info else '' }}</textarea>
+                    </div>
+                </div>
+                <div class="form-sub-title">
+                    <span>过程总览</span>
+                </div>
+                {% for spare in spare_info %}
+                <div class="form-item" style="border-top: 1px solid #E1E5EB;">
+                    <label class="form-item-label" for="f_vc_renewal_spare_{{ spare.f_vc_id }}"
+                    >{% if spare.f_vc_spare == '1' %}
+                        初报:
+                        {% elif spare.f_vc_spare == '2' %}
+                        续报:
+                        {% elif spare.f_vc_spare == '3' %}
+                        终报:
+                        {% endif %}
+                    </label>
+                    <input type="hidden" name="spare_id" value="{{ spare.f_vc_id }}">
+                    <div class="form-item-content">
+                            <textarea
+                                    class="form-control"
+                                    type="text"
+                                    id="f_vc_renewal_spare_{{ spare.f_vc_id }}"
+                                    name="f_vc_renewal_spare_{{ spare.f_vc_id }}"
+                                    style="margin-top: 5px"
+                                    rows="4"
+                            >{{ spare.f_vc_renewal }}</textarea>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="action-box">
+                    <input class="button-box cursor-scale is-blue" type="submit"  value="保存修改">
+                </div>
+            </form>
+        </div>
+
+
+    </div>
 {% endblock %}

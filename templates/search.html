@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}
+信息报送修改工具
+{% endblock %}
+
+{% block script %}
+<script src="../static/jquery.min.js"></script>
+<script>
+    /**
+     * @function
+     * @todo tab切换
+     */
+    function onTabChange() {
+        window.location.href = '/'
+    }
+
+
+</script>
+{% endblock %}
+{% block content %}
+<div class="page-wrapper">
+    <!--页面切换-->
+    <div class="tab-box">
+        <div class="tab-item cursor-scale is-active">信息查询</div>
+        <div class="tab-item cursor-scale " onclick="onTabChange()">信息编辑</div>
+    </div>
+
+    <!--内容区域-->
+    <div class="content-box">
+        <div class="search-box">
+            <form method="GET" action="/search">
+                <input type="text" id="Sorderid" name="Sorderid" placeholder="请输入订单号" {% if event
+                       %}value="{{ event.f_vc_orderid }}" {% endif %}/>
+                <input class="button-box cursor-opacity" type="submit" value="查询"/>
+            </form>
+        </div>
+        <form method="POST" action="/search">
+            <div class="table-box">
+                {% if event %}
+                    <input type="hidden" name="orderid" value="{{ event.f_vc_orderid }}">
+                    <div class="table-row">
+                        <div class="table-row-label">事件ID</div>
+                        <div class="table-row-value">{{ event.f_eventid }}</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-row-label">事件类型</div>
+                        <div class="table-row-value">{% if event.f_typeid == 0 %}事故{% elif event.f_typeid == 1 %}救援{%
+                            elif event.f_typeid == 3 %}养护{% elif event.f_typeid == 10 %}异常事件{%endif%}
+                        </div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-row-label">事件状态</div>
+                        <div class="table-row-value">{% if event.f_state == 0 %}接报
+                            {% elif event.f_state == 1 %}接收
+                            {% elif event.f_state == 2 %}接警
+                            {% elif event.f_state == 5 %}出发
+                            {% elif event.f_state == 6 %}到达
+                            {% elif event.f_state == 7 %}施救
+                            {% elif event.f_state == 8 %}离场
+                            {% elif event.f_state == 9 %}解拖
+                            {% elif event.f_state == 10 %}结案{%endif%}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="table-row">
+                        <div class="table-row-label">事件ID</div>
+                        <div class="table-row-value">{% if prompt %}查无{{prompt}}信息，请检查{% endif %}</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-row-label">事件类型</div>
+                        <div class="table-row-value"></div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-row-label">事件状态</div>
+                        <div class="table-row-value"></div>
+                    </div>
+
+                {% endif %}
+                <!--操作栏-->
+                <br>
+                <br>
+                <br>
+                <div class="action-box">
+                    {% if event %}
+                        {% if event.f_state == 10 %}
+                            <input class="button-box cursor-scale is-purple" type="submit"  value="事件恢复">
+                        {% else %}
+                            <input class="button-box cursor-scale is-orange" type="submit" value="事件结案">
+                        {% endif %}
+                    {% else %}
+                        <input class="button-box cursor-scale is-purple" type="submit" disabled value="事件恢复">
+                        <input class="button-box cursor-scale is-orange" type="submit" disabled value="事件结案">
+                    {% endif %}
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

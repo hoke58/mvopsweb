@@ -3,22 +3,32 @@
 登录
 {% endblock %}
 {% block content %}
-    <h2>登录</h2>
-    <form action="/login" method="post">
 
-        <div class="form-item">
-            <label class="form-item-label" for="username">用户名：</label>
-            <div class="form-item-content">
-                <input type="text" id="username" name="username">
+    <!--登录模块-->
+    <div class="login-box">
+        <div class="login-title">信息报送修改工具</div>
+        <form class="login-form" action="/login" method="post">
+            <div class="login-form-row">
+                <label for="username">用户名</label>
+                <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="请输入用户名"
+                />
             </div>
-        </div>
-        <div class="form-item">
-            <label class="form-item-label" for="password">密码：</label>
-            <div class="form-item-content">
-                <input type="password" id="password" name="password">
+            <div class="login-form-row">
+                <label for="password">密码</label>
+                <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="请输入密码"
+                />
             </div>
-        </div>
-        <br>
-        <input type="submit" value="登录">
-    </form>
+            <div class="login-form-bottom">
+                <button type="submit">登录</button>
+            </div>
+        </form>
+    </div>
 {% endblock %}
