@@ -19,13 +19,16 @@ from urllib.parse import quote_plus as urlquote
 app = Flask(__name__)
 app.secret_key = 'microvideo'  # 用于安全地签名session cookie
 
-# 需要绑定的备份数据库
+# 测试备份数据库
 SQLALCHEMY_BINDS = {
     'back': 'mysql+pymysql://root:123456@10.120.128.3/back'
     # 'back': 'mysql+pymysql://back_prozhdd:BKpr.134@192.168.211.8/prozhdd'
 }
 
-# 生产数据库
+# 允许修改多少天之内的单子
+ALLOWED_DAYS = 30
+
+# 测试主数据库
 # app.config['SQLALCHEMY_DATABASE_URI'] = f"{DB_DIALECT}+{DB_DRIVER}://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 # f'mysql+pymysql://root:{urlquote("Zhdd@2021")}@192.168.251.36/zhdd' 密码有特殊字符引起保障时，需要编码
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123456@10.120.128.3/zhdd'
@@ -53,6 +56,8 @@ class TEvent(db.Model):
     f_state = db.Column(db.String(255))
     f_eventstate = db.Column(db.String(255))
     f_accidentdesc = db.Column(db.String(6000))
+    f_createtime = db.Column(db.DateTime)
+
 
 
 class TEventAccidentRetrofit(db.Model):
@@ -131,7 +136,7 @@ class TEvent2(db.Model):
     f_typeid = db.Column(db.Integer)
     f_state = db.Column(db.String(255))
     f_eventstate = db.Column(db.String(255))
-    f_accidentdesc = db.Column(db.String(6000))
+    # f_accidentdesc = db.Column(db.String(6000))
 
 
 class TEventAccidentRetrofit2(db.Model):
@@ -274,7 +279,6 @@ def load_logged_in_user():
             if current_user:
                 g.user = current_user
             else:
-            #     print("redirect1")
                 return redirect(url_for('login'))
         except Exception as e:
             print(e)
@@ -287,155 +291,86 @@ def index():
 
 
 # 修改这个路由以直接从查询字符串获取`orderid`
-@app.route('/query', methods=['GET'])
-def query():
-    orderid = request.args.get('orderid')
-    event = TEvent.query.filter_by(f_vc_orderid=orderid).first()
-
-    retrofit_info = None
-
-    if event:
-        spare_info = TEventSpare.query.filter_by(f_eventid=event.f_eventid).all()
-        if event.f_typeid == 0:
-            retrofit_info = TEventAccidentRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
-            # jam_info = TEventAccident.query.filter_by(f_eventid=event.f_eventid).first()
-        elif event.f_typeid == 1:
-            retrofit_info = TEventClearRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
-            # jam_info = TEventClear.query.filter_by(f_eventid=event.f_eventid).first()
-        elif event.f_typeid == 3:
-            retrofit_info = TEventConmainRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
-            # jam_info = TEventConmain.query.filter_by(f_eventid=event.f_eventid).first()
-        elif event.f_typeid == 10:
-            retrofit_info = TEventAbnormal.query.filter_by(f_eventid=event.f_eventid).first()
-            # jam_info = None
-            # 根据需要添加其他条件分支
-            # ...
-        # return render_template('results.html', event=event, retrofit_info=retrofit_info, jam_info=jam_info,
-                               # spare_info=spare_info, current_user=g.user)
-        return render_template('results.html', event=event, retrofit_info=retrofit_info,
-                               spare_info=spare_info, current_user=g.user)
-
-    # return redirect(url_for('login'))
-    prompt = orderid
-    return render_template('index.html', current_user=g.user, prompt=prompt)
-
-
-@app.route('/update', methods=['POST'])
-def update():
-    orderid = request.form.get('orderid')  # 获取表单中的订单号
-    try:
-        event_id = request.form.get('event_id')
-        f_eventstate = request.form.get('f_eventstate')
-        m_type = request.form.get('m_type')
-        # f_accidentdesc = request.form.get('f_accidentdesc')
-        # f_state = request.form.get('f_state')
-
-
-        # 首先获取TEvent实例
-        event = TEvent.query.filter_by(f_eventid=event_id).first()
+@app.route('/edit', methods=['GET', 'POST'])
+def edit():
+    if request.method == 'GET':
+        # if orderid is None:
+        if request.args.get('Eorderid') is None:
+            return render_template('index.html', current_user=g.user, event=None)
+        orderid = request.args.get('Eorderid').strip()
+        event = TEvent.query.filter_by(f_vc_orderid=orderid).first()
+        retrofit_info = None
 
         if event:
-            """
-            如果事件状态 f_eventstate 从结案 1 变更成未结案 0， 那么事件进展状态 f_state 就回退成 9 解拖。
-            主表事件描述 f_accidentdesc 只同步终报。
-            """
-            if m_type == 'event':
-                print('事件恢复')
-                event2 = TEvent2.query.filter_by(f_eventid=event_id).first()
-                if event2:
-                    event2.f_eventid = event.f_eventid
-                    event2.f_state = event.f_state
-                    event2.f_eventstate = event.f_eventstate
-                    event2.f_accidentdesc = event.f_accidentdesc
-                    event2.f_typeid = event.f_typeid
-                    event2.f_vc_orderid = event.f_vc_orderid
-                else:
-                    event2 = TEvent2(f_eventid=event.f_eventid,
-                                     f_state=event.f_state,
-                                     f_eventstate=event.f_eventstate,
-                                     f_accidentdesc=event.f_accidentdesc,
-                                     f_typeid=event.f_typeid,
-                                     f_vc_orderid=event.f_vc_orderid)
-                    db.session.add(event2)
-                # 如果是事件恢复操作，即 事件状态 1 → 0
-                if str(event.f_eventstate) == '1' and str(f_eventstate) == '0':
-                    event.f_state = '9'
-                    event.f_eventstate = '0'
-                elif str(event.f_eventstate) == '0' and str(f_eventstate) == '1':
-                    event.f_state = '10'
-                    event.f_eventstate = '1'
-                # event.f_state = f_state
-                # event.f_accidentdesc = f_accidentdesc
+            if not check_time(event):
+                return render_template('index.html', prompt=f'订单 {orderid} 超出最大允许修改天数{ALLOWED_DAYS}天。', current_user=g.user)
+            spare_info = TEventSpare.query.filter_by(f_eventid=event.f_eventid).all()
+            if event.f_typeid == 0:
+                retrofit_info = TEventAccidentRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            elif event.f_typeid == 1:
+                retrofit_info = TEventClearRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            elif event.f_typeid == 3:
+                retrofit_info = TEventConmainRetrofit.query.filter_by(f_eventid=event.f_eventid).first()
+            elif event.f_typeid == 10:
+                retrofit_info = TEventAbnormal.query.filter_by(f_eventid=event.f_eventid).first()
+                # jam_info = None
+                # 根据需要添加其他条件分支
+            return render_template('index.html', event=event, retrofit_info=retrofit_info,
+                                   spare_info=spare_info, current_user=g.user)
 
-            elif m_type == 'retrofit':
+        return render_template('index.html', prompt=f'查无 {orderid} 信息，请检查', current_user=g.user)
+    # POST
+    else:
+        orderid = request.form.get('orderid')  # 获取表单中的订单号
+        print('获取表单中的订单号: ',orderid)
+        try:
+            event_id = request.form.get('event_id')
+
+            # 首先获取TEvent实例
+            event = TEvent.query.filter_by(f_eventid=event_id).first()
+
+            if event:
                 # 根据event.f_typeid来判断更新哪个子表
                 print('修改过程总揽')
                 retrofit_model = None
-                # jam_model = None
                 if event.f_typeid == 0:
                     retrofit_model = TEventAccidentRetrofit
-                    # jam_model = TEventAccident
                     retrofit_model2 = TEventAccidentRetrofit2
-                    # jam_model2 = TEventAccident2
                 elif event.f_typeid == 1:
                     retrofit_model = TEventClearRetrofit
-                    # jam_model = TEventClear
                     retrofit_model2 = TEventClearRetrofit2
-                    # jam_model2 = TEventClear2
                 elif event.f_typeid == 3:
                     retrofit_model = TEventConmainRetrofit
-                    # jam_model = TEventConmain
                     retrofit_model2 = TEventConmainRetrofit2
-                    # jam_model2 = TEventConmain2
                 elif event.f_typeid == 10:
                     retrofit_model = TEventAbnormal
                     retrofit_model2 = TEventAbnormal2
 
-                # if jam_model:
-                #     # 获取子表实例
-                #     jam = jam_model.query.filter_by(f_eventid=event_id).first()
-                #     if jam:
-                #         jam2 = jam_model2.query.filter_by(f_eventid=event_id).first()
-                #         if not jam2:
-                #             jam2 = jam_model2(f_eventid=jam.f_eventid,
-                #                               f_up_jamnum=jam.f_up_jamnum,
-                #                               f_down_jamnum=jam.f_down_jamnum)
-                #             db.session.add(jam2)
-                #         else:
-                #             jam2.f_eventid = jam.f_eventid
-                #             jam2.f_up_jamnum = jam.f_up_jamnum
-                #             jam2.f_down_jamnum = jam.f_down_jamnum
-                #
-                #         f_up_jamnum = request.form.get('f_up_jamnum')
-                #         f_down_jamnum = request.form.get('f_down_jamnum')
-                #         # 直接对实例属性赋值
-                #         jam.f_up_jamnum = f_up_jamnum
-                #         jam.f_down_jamnum = f_down_jamnum
-
                 if retrofit_model:
                     # 获取子表实例
-                    retrofit = retrofit_model.query.filter_by(f_eventid=event_id).first()
-                    if retrofit:
+                    retrofit_info = retrofit_model.query.filter_by(f_eventid=event_id).first()
+                    if retrofit_info:
                         retrofit2 = retrofit_model2.query.filter_by(f_eventid=event_id).first()
                         if retrofit2:
-                            retrofit2.f_eventid = retrofit.f_eventid
-                            retrofit2.f_vc_early = retrofit.f_vc_early
-                            retrofit2.f_vc_renewal = retrofit.f_vc_renewal
-                            retrofit2.f_vc_final = retrofit.f_vc_final
+                            retrofit2.f_eventid = retrofit_info.f_eventid
+                            retrofit2.f_vc_early = retrofit_info.f_vc_early
+                            retrofit2.f_vc_renewal = retrofit_info.f_vc_renewal
+                            retrofit2.f_vc_final = retrofit_info.f_vc_final
                         else:
-                            retrofit2 = retrofit_model2(f_eventid=retrofit.f_eventid,
-                                                        f_vc_early=retrofit.f_vc_early,
-                                                        f_vc_renewal=retrofit.f_vc_renewal,
-                                                        f_vc_final=retrofit.f_vc_final)
+                            retrofit2 = retrofit_model2(f_eventid=retrofit_info.f_eventid,
+                                                        f_vc_early=retrofit_info.f_vc_early,
+                                                        f_vc_renewal=retrofit_info.f_vc_renewal,
+                                                        f_vc_final=retrofit_info.f_vc_final)
                             db.session.add(retrofit2)
                         f_vc_early = request.form.get('f_vc_early')
                         f_vc_renewal = request.form.get('f_vc_renewal')
                         f_vc_final = request.form.get('f_vc_final')
                         # 直接对实例属性赋值
-                        retrofit.f_vc_early = f_vc_early
-                        retrofit.f_vc_renewal = f_vc_renewal
-                        if retrofit.f_vc_early != f_vc_final:
-                            retrofit.f_vc_final = f_vc_final
+                        retrofit_info.f_vc_early = f_vc_early
+                        retrofit_info.f_vc_renewal = f_vc_renewal
+                        # 修改终报，则主表终报一起修改
+                        if retrofit_info.f_vc_final != f_vc_final:
+                            retrofit_info.f_vc_final = f_vc_final
                             event.f_accidentdesc = f_vc_final
 
                 # 更新TEventSpare表
@@ -463,19 +398,91 @@ def update():
                                                   f_vc_createname=spare.f_vc_createname)
                             db.session.add(spare2)
                         spare.f_vc_renewal = f_vc_renewal_spare
-            print("提交数据库")
+                print("提交数据库")
+                db.session.commit()
+
+                flash('修改成功', 'success')
+
+            else:
+                flash('未找到对应的事件', 'error')
+
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash(f'修改失败: {e}', 'error')
+        print('update done!')
+
+        return redirect(url_for('edit', Eorderid=orderid))
+
+
+
+
+@app.route('/search', methods=['GET','POST'])
+def search():
+    if request.method == 'POST':
+        orderid = request.form.get('orderid').strip()
+        event = TEvent.query.filter_by(f_vc_orderid=orderid).first()
+        print(event.f_create_time)
+
+        if event:
+            # f_eventstate 0进行中，1结案
+            # f_state 事件进展状态 1-10
+            # 进行结案与恢复操作
+
+            event2 = TEvent2.query.filter_by(f_eventid=event.f_eventid).first()
+            if event2:
+                event2.f_eventid = event.f_eventid
+                event2.f_state = event.f_state
+                event2.f_eventstate = event.f_eventstate
+                # event2.f_accidentdesc = event.f_accidentdesc
+                event2.f_typeid = event.f_typeid
+                event2.f_vc_orderid = event.f_vc_orderid
+            else:
+                event2 = TEvent2(f_eventid=event.f_eventid,
+                                 f_state=event.f_state,
+                                 f_eventstate=event.f_eventstate,
+                                 f_typeid=event.f_typeid,
+                                 f_vc_orderid=event.f_vc_orderid)
+            db.session.add(event2)
+
+            if str(event.f_eventstate) == '1':
+                event.f_state = '9'
+                event.f_eventstate = '0'
+            elif str(event.f_eventstate) == '0':
+                event.f_state = '10'
+                event.f_eventstate = '1'
+            print('事件恢复')
+
             db.session.commit()
+            return render_template('search.html', event=event, current_user=g.user)
 
-            flash('修改成功', 'success')
+        prompt = orderid
+        return render_template('search.html', prompt=prompt, current_user=g.user)
+    else:
+        if request.args.get('Sorderid') is None:
+            return render_template('search.html',current_user=g.user)
+
+        orderid = request.args.get('Sorderid').strip()
+        event = TEvent.query.filter_by(f_vc_orderid=orderid).first()
+
+        if event:
+            if check_time(event):
+                return render_template('search.html', event=event, current_user=g.user)
+            else:
+                return render_template('search.html', prompt=f'订单{orderid}超出最大允许修改天数{ALLOWED_DAYS}天。', current_user=g.user)
         else:
-            flash('未找到对应的事件', 'error')
+            return render_template('search.html', prompt=f'查无{orderid}信息，请检查', current_user=g.user)
 
-    except Exception as e:
-        db.session.rollback()
-        print(e)
-        flash(f'修改失败: {e}', 'error')
 
-    return redirect(url_for('query', orderid=orderid))
+def check_time(event):
+    today = datetime.today()
+    event_createtime = datetime.strptime(event.f_createtime.strftime('%Y-%m-%d'), '%Y-%m-%d')
+    delta = today - event_createtime
+
+    if delta.days > ALLOWED_DAYS:
+        return False
+    return True
+
 
 
 if __name__ == '__main__':

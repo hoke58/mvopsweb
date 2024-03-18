@@ -34,7 +34,7 @@
                 <input class="button-box cursor-opacity" type="submit" value="查询"/>
             </form>
         </div>
-        <form method="POST" action="/search">
+        <form method="POST" action="/search" class="form-box align-bottom">
             <div class="table-box">
                 {% if event %}
                     <input type="hidden" name="orderid" value="{{ event.f_vc_orderid }}">
@@ -64,7 +64,7 @@
                 {% else %}
                     <div class="table-row">
                         <div class="table-row-label">事件ID</div>
-                        <div class="table-row-value">{% if prompt %}查无{{prompt}}信息，请检查{% endif %}</div>
+                        <div class="table-row-value">{% if prompt %}{{prompt}}{% endif %}</div>
                     </div>
                     <div class="table-row">
                         <div class="table-row-label">事件类型</div>
@@ -80,19 +80,20 @@
                 <br>
                 <br>
                 <br>
-                <div class="action-box">
-                    {% if event %}
-                        {% if event.f_state == 10 %}
-                            <input class="button-box cursor-scale is-purple" type="submit"  value="事件恢复">
-                        {% else %}
-                            <input class="button-box cursor-scale is-orange" type="submit" value="事件结案">
-                        {% endif %}
-                    {% else %}
-                        <input class="button-box cursor-scale is-purple" type="submit" disabled value="事件恢复">
-                        <input class="button-box cursor-scale is-orange" type="submit" disabled value="事件结案">
-                    {% endif %}
-                </div>
 
+
+            </div>
+            <div class="action-box">
+                {% if event %}
+                    {% if event.f_state == 10 %}
+                        <input class="button-box cursor-scale is-purple" type="submit"  value="事件恢复">
+                    {% else %}
+                        <input class="button-box cursor-scale is-orange" type="submit" value="事件结案">
+                    {% endif %}
+                {% else %}
+                    <input class="button-box cursor-scale is-purple" type="submit" disabled value="事件恢复">
+                    <input class="button-box cursor-scale is-orange" type="submit" disabled value="事件结案">
+                {% endif %}
             </div>
         </form>
     </div>
